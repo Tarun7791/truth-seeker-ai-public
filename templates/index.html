@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TruthSeeker • Fake News Detection</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root {
+    --bg1: #020617;
+    --bg2: #020617;
+    --card: rgba(15, 23, 42, 0.85);
+    --border: rgba(148, 163, 184, 0.15);
+    --primary: #6366f1;
+    --real: #22c55e;
+    --fake: #ef4444;
+    --text: #e5e7eb;
+    --muted: #94a3b8;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at top, #1e293b 0%, transparent 60%),
+        linear-gradient(135deg, var(--bg1), var(--bg2));
+    font-family: "Segoe UI", system-ui, sans-serif;
+    color: var(--text);
+}
+
+/* ---------- Layout ---------- */
+.wrapper {
+    max-width: 900px;
+    margin: 60px auto;
+    padding: 0 20px;
+}
+
+.card {
+    background: var(--card);
+    backdrop-filter: blur(14px);
+    border-radius: 18px;
+    padding: 35px;
+    border: 1px solid var(--border);
+    box-shadow: 0 30px 80px rgba(0,0,0,.55);
+}
+
+/* ---------- Header ---------- */
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 2.4rem;
+    background: linear-gradient(90deg, #818cf8, #22d3ee);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.header p {
+    color: var(--muted);
+    margin-top: 8px;
+}
+
+/* ---------- Input ---------- */
+textarea {
+    width: 100%;
+    min-height: 160px;
+    background: #020617;
+    color: var(--text);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    padding: 18px;
+    font-size: 16px;
+    resize: vertical;
+}
+
+textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+textarea::placeholder {
+    color: #64748b;
+}
+
+.word-bar {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--muted);
+}
+
+/* ---------- Button ---------- */
+button {
+    width: 100%;
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #6366f1, #22d3ee);
+    border: none;
+    color: white;
+    cursor: pointer;
+    transition: transform .2s, opacity .2s;
+}
+
+button:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+button:disabled {
+    opacity: .35;
+    cursor: not-allowed;
+}
+
+/* ---------- Result ---------- */
+.result {
+    margin-top: 35px;
+    display: none;
+}
+
+.result-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.badge {
+    padding: 8px 20px;
+    border-radius: 999px;
+    font-weight: 800;
+    letter-spacing: .5px;
+}
+
+.badge.real {
+    background: rgba(34,197,94,.15);
+    color: var(--real);
+    box-shadow: 0 0 25px rgba(34,197,94,.3);
+}
+
+.badge.fake {
+    background: rgba(239,68,68,.15);
+    color: var(--fake);
+    box-shadow: 0 0 25px rgba(239,68,68,.3);
+}
+
+.confidence {
+    font-size: 15px;
+    color: var(--muted);
+}
+
+/* ---------- Progress ---------- */
+.progress-wrap {
+    margin-top: 14px;
+}
+
+.progress-bg {
+    height: 10px;
+    background: #020617;
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+.progress {
+    height: 100%;
+    width: 0%;
+    transition: width .6s ease;
+}
+
+/* ---------- Sections ---------- */
+.section {
+    margin-top: 26px;
+    padding: 18px;
+    border-radius: 14px;
+    background: rgba(2,6,23,.7);
+    border: 1px solid var(--border);
+}
+
+.section h3 {
+    margin: 0 0 8px;
+    font-size: 15px;
+    color: #c7d2fe;
+}
+
+.section p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.6;
+}
+</style>
+</head>
+
+<body>
+<div class="wrapper">
+<div class="card">
+
+    <div class="header">
+        <h1>TruthSeeker AI</h1>
+        <p>Advanced Fake News Detection with Explainable AI</p>
+    </div>
+
+    <textarea id="input" placeholder="Paste a news article or long headline (minimum 15 words)…"></textarea>
+
+    <div class="word-bar">
+        <span>Minimum 15 words required</span>
+        <span id="count">0 / 15</span>
+    </div>
+
+    <button id="btn" disabled onclick="analyze()">Analyze News</button>
+
+    <div id="result" class="result">
+        <div class="result-top">
+            <div id="badge" class="badge"></div>
+            <div id="conf" class="confidence"></div>
+        </div>
+
+        <div class="progress-wrap">
+            <div class="progress-bg">
+                <div id="bar" class="progress"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>🧠 AI Reasoning</h3>
+            <p id="reason"></p>
+        </div>
+
+        <div class="section">
+            <h3>🌐 Translated Content</h3>
+            <p id="translated"></p>
+        </div>
+    </div>
+
+</div>
+</div>
+
+<script>
+const input = document.getElementById("input");
+const count = document.getElementById("count");
+const btn = document.getElementById("btn");
+
+input.addEventListener("input", () => {
+    const words = input.value.trim().split(/\s+/).filter(Boolean).length;
+    count.innerText = `${words} / 15`;
+    btn.disabled = words < 15;
+});
+
+async function analyze() {
+    btn.innerText = "Analyzing…";
+    btn.disabled = true;
+
+    const res = await fetch("/predict", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ text: input.value })
+    });
+
+    const data = await res.json();
+
+    document.getElementById("result").style.display = "block";
+
+    const badge = document.getElementById("badge");
+    badge.innerText = data.prediction;
+    badge.className = "badge " + data.prediction.toLowerCase();
+
+    document.getElementById("conf").innerText = `Confidence: ${data.confidence}%`;
+
+    const bar = document.getElementById("bar");
+    bar.style.width = data.confidence + "%";
+    bar.style.background = data.prediction === "FAKE"
+        ? "linear-gradient(90deg, #ef4444, #fb7185)"
+        : "linear-gradient(90deg, #22c55e, #4ade80)";
+
+    document.getElementById("reason").innerText = data.reason;
+    document.getElementById("translated").innerText = data.translated_text;
+
+    btn.innerText = "Analyze News";
+    btn.disabled = false;
+}
+</script>
+</body>
+</html>

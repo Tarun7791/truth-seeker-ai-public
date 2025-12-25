@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environment
+venv/
+.env
+
+# Model files (optional – see note below)
+model.pkl
+vectorizer.pkl
+
+# OS
+.DS_Store
+
+# Ignore datasets
+dataset/*.csv
+dataset/*.zip
+dataset/*.txt
